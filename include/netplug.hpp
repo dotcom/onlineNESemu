@@ -18,8 +18,6 @@ namespace NESemu{
         std::string m_ipaddr;
         int m_port;
 
-        sf::TcpListener m_listener;
-        sf::TcpSocket m_socket_screen;
-        sf::TcpSocket m_socket_controller;
+        sf::UdpSocket m_socket;
     };
 }

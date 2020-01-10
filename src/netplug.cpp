@@ -7,41 +7,49 @@ namespace NESemu{
         m_ipaddr(ipaddr),
         m_port(port)
     {
-        if(m_server){
-            m_listener.listen(m_port);
-        }
     }
 
     void Netplug::plug(){
-        if(m_server){
-            std::cout << "server : listenning..." << std::endl;
-            m_listener.accept(m_socket_screen);
-            m_listener.accept(m_socket_controller);
-            std::cout << "server : be connected !" << std::endl;
-        }
-        else
-        {
-            std::cout << "client : connecting..." << std::endl;
-            m_socket_screen.connect(m_ipaddr, m_port);
-            m_socket_controller.connect(m_ipaddr, m_port);
-            std::cout << "client : connect succeed!" << std::endl;
-        }
-        //m_socket.setBlocking(false);
+        m_socket.bind(m_port);
+        std::cout << "plugged port : " << m_port << std::endl;
     }
 
     void Netplug::send_screen(Screen& screen)
     {
-        m_socket_screen.send(screen.m_screen_matrix, 256*240);
+        sf::Packet packet;
+        for (int i=0; i<sizeof(screen.m_screen_matrix); i++)
+        {
+            packet << screen.m_screen_matrix[i];
+        }
+        m_socket.send(packet, m_ipaddr, m_port);
     }
 
     void Netplug::receive_screen(Screen& screen)
     {
+        sf::Packet packet;
+        sf::IpAddress remote_addr;
+        unsigned short remote_port;
+        while(
+            not (
+                (remote_addr == static_cast<sf::IpAddress>(m_ipaddr)) &&
+                (remote_port == m_port) &&
+                (packet.getDataSize() == sizeof(screen.m_screen_matrix))
+            )
+        )
+            m_socket.receive(packet, remote_addr, remote_port);
+        
+        for (int i=0; i<sizeof(screen.m_screen_matrix); i++)
+        {
+            packet >> screen.m_screen_matrix[i];
+        }
+        /*
         size_t received = 0;
-        while(!(received == 256*240)){
+        while(received != 256*240){
             size_t num = 0;
             m_socket_screen.receive(&screen.m_screen_matrix[received], 256*240 - received, num);
             received += num;
         }
+        */
         for (int x=0; x<256; x++){
             for (int y=0; y<240; y++){
                 screen.setPixel(x,y,screen.m_screen_matrix[x*240 + y]);
@@ -57,14 +65,29 @@ namespace NESemu{
         {
             keyStates |= (sf::Keyboard::isKeyPressed(controller.m_keyBindings[button]) << shift++);
         }
-        m_socket_controller.send(&keyStates, sizeof(keyStates));
+
+        sf::Packet packet;
+        packet << keyStates;
+        m_socket.send(packet, m_ipaddr, m_port);
     }
         
     void Netplug::receive_controller_state(NetController& controller)
     {
-        unsigned int keyStates;
+        sf::Packet packet;
+        sf::IpAddress remote_addr;
+        unsigned short remote_port;
+        while(
+            not (
+                (remote_addr == static_cast<sf::IpAddress>(m_ipaddr)) &&
+                (remote_port == m_port) &&
+                (packet.getDataSize() == sizeof(controller.m_netKeyState))
+            )
+        )
+            m_socket.receive(packet, remote_addr, remote_port);
+        /*
         size_t received;
         m_socket_controller.receive(&keyStates, sizeof(keyStates), received);
-        controller.m_netKeyState = keyStates;
+        */
+        packet >> controller.m_netKeyState;
     }
 }

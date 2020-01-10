@@ -5,10 +5,8 @@
 
 int main(int argc, char** argv)
 {
-    //NESemu::KeyBinding p1 {sf::Keyboard::J, sf::Keyboard::K, sf::Keyboard::RShift, sf::Keyboard::Return,
-      //                     sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D};
-    NESemu::KeyBinding p1 {sf::Keyboard::U, sf::Keyboard::I, sf::Keyboard::O, sf::Keyboard::P,
-                           sf::Keyboard::E, sf::Keyboard::R, sf::Keyboard::T, sf::Keyboard::Y};
+    NESemu::KeyBinding p1 {sf::Keyboard::J, sf::Keyboard::K, sf::Keyboard::RShift, sf::Keyboard::Return,
+                           sf::Keyboard::W, sf::Keyboard::S, sf::Keyboard::A, sf::Keyboard::D};
     
     if (argc != 5){
         std::cerr << "invalid args" << std::endl;
