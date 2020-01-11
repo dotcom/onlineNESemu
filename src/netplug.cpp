@@ -16,32 +16,55 @@ namespace NESemu{
 
     void Netplug::send_screen(Screen& screen)
     {
-        sf::Packet packet;
-        for (int i=0; i<sizeof(screen.m_screen_matrix); i++)
+        // DATA
+        int sent = 0;
+        while(sent != 256*240)
         {
-            packet << screen.m_screen_matrix[i];
+            sf::Packet packet;
+            packet << uint8_t(0);
+            for (int i=0; i<std::min(256*240 - sent,1471)/*sizeof(screen.m_screen_matrix)*/; i++)
+            {
+                packet << screen.m_screen_matrix[i];
+            }
+            m_socket.send(packet, m_ipaddr, m_port);
+            sent +=std::min(256*240 - sent,1471);
         }
+        
+        // END
+        sf::Packet packet;
+        packet << uint8_t(1);
         m_socket.send(packet, m_ipaddr, m_port);
     }
 
     void Netplug::receive_screen(Screen& screen)
     {
+        int offset = 0;
         sf::Packet packet;
         sf::IpAddress remote_addr;
         unsigned short remote_port;
-        while(
-            not (
-                (remote_addr == static_cast<sf::IpAddress>(m_ipaddr)) &&
-                (remote_port == m_port) &&
-                (packet.getDataSize() == sizeof(screen.m_screen_matrix))
-            )
-        )
-            m_socket.receive(packet, remote_addr, remote_port);
-        
-        for (int i=0; i<sizeof(screen.m_screen_matrix); i++)
+        for(;;)
         {
-            packet >> screen.m_screen_matrix[i];
+            uint8_t header;
+            m_socket.receive(packet, remote_addr, remote_port);
+            if ((remote_addr == static_cast<sf::IpAddress>(m_ipaddr)) && (remote_port == m_port)){
+                auto size = packet.getDataSize();
+                packet >> header;
+                if (header == 0){ // DATA
+                    for (int i=0; i<size-1; i++)
+                    {
+                        if(offset >= 256*240)
+                            break; // LOST END PACKET
+                        packet >> screen.m_screen_matrix[offset];
+                        offset++;
+                    }
+                }
+                else // END
+                {
+                    break;
+                }
+            }
         }
+        
         /*
         size_t received = 0;
         while(received != 256*240){
@@ -76,18 +99,20 @@ namespace NESemu{
         sf::Packet packet;
         sf::IpAddress remote_addr;
         unsigned short remote_port;
-        while(
-            not (
-                (remote_addr == static_cast<sf::IpAddress>(m_ipaddr)) &&
-                (remote_port == m_port) &&
-                (packet.getDataSize() == sizeof(controller.m_netKeyState))
-            )
+
+        m_socket.setBlocking(false);
+        m_socket.receive(packet, remote_addr, remote_port);
+        m_socket.setBlocking(true);
+
+        if((remote_addr == static_cast<sf::IpAddress>(m_ipaddr)) &&
+            (remote_port == m_port) &&
+            (packet.getDataSize() == sizeof(controller.m_netKeyState))
         )
-            m_socket.receive(packet, remote_addr, remote_port);
+            packet >> controller.m_netKeyState;
         /*
         size_t received;
         m_socket_controller.receive(&keyStates, sizeof(keyStates), received);
         */
-        packet >> controller.m_netKeyState;
+        // TODO buf clear
     }
 }
