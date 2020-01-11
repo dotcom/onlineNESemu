@@ -23,12 +23,12 @@ namespace NESemu{
             sf::Packet packet;
             packet << uint8_t(0); // DATA header
             packet << sent;
-            for (int i=0; i<std::min(256*240 - sent,1471); i++)
+            for (int i=0; i<std::min(256*240 - sent,1472 - 5); i++)
             {
                 packet << screen.m_screen_matrix[sent + i];
             }
             m_socket.send(packet, m_ipaddr, m_port);
-            sent +=std::min(256*240 - sent,1471);
+            sent +=std::min(256*240 - sent,1472 - 5);
         }
         
         // END
@@ -54,7 +54,7 @@ namespace NESemu{
                     packet >> sent;
                     for (int i=0; i<size-1; i++)
                     {
-                        packet >> screen.m_screen_matrix[sent + 1];
+                        packet >> screen.m_screen_matrix[sent + i];
                     }
                 }
                 else // END

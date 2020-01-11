@@ -1,3 +1,0 @@
-/Users/dotcom/github/NES/NESemu/build/CMakeFiles/rebuild_cache.dir
-/Users/dotcom/github/NES/NESemu/build/CMakeFiles/edit_cache.dir
-/Users/dotcom/github/NES/NESemu/build/CMakeFiles/NESemu.dir
