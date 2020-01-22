@@ -12,10 +12,8 @@ namespace NESemu
         std::ifstream file (path, std::ios_base::binary | std::ios_base::in);
         if (!file)
         {
-            std::cerr << "Could not open ROM file from path: " << path << std::endl;
+            std::cerr << "open failed... " << path << std::endl;
             return false;
-        } else {
-            std::cout << "Reading ROM from path: " << path << std::endl;
         }
 
         /*
@@ -35,23 +33,23 @@ namespace NESemu
         std::vector<uint8_t> header(0x10);
         if (!file.read(reinterpret_cast<char*>(&header[0]), 0x10))
         {
-            std::cerr << "Reading iNES header failed." << std::endl;
+            std::cerr << "read failed..." << std::endl;
             return false;
         }
 
         // マジックナンバー NES\x1A であること
         if (std::string{&header[0], &header[4]} != "NES\x1A")
         {
-            std::cerr << "Not a valid iNES image." << std::endl;
+            std::cerr << "not ines format..." << std::endl;
             return false;
         }
 
         // Read PRG-ROM
         uint8_t prg_size = header[4];
-        std::cout << "16KB PRG-ROM size: " << prg_size << std::endl;
+        std::cout << "PRG_ROM size: " << prg_size << std::endl;
         if (!prg_size)
         {
-            std::cerr << "ROM has no PRG-ROM." << std::endl;
+            std::cerr << "no PRG-ROM..." << std::endl;
             return false;
         }
         else
