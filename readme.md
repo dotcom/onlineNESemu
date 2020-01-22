@@ -3,7 +3,7 @@
 
 ### [WIP]
 - [ ] APU
-- [ ] other MAPPERs (This is implemented only mapper0)
+- [ ] other MAPPERs (This is implemented only for mapper0.)
 ### require
 ```
 brew install sfml
